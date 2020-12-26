@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t snhoover81/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true snhoover81/react-test npm test
+
+after_success:
+  - docker build -t snhoover81/multi-client ./client
+  - docker build -t snhoover81/multi-nginx ./nginx
+  - docker build -t snhoover81/multi-server ./server
+  - docker build -t snhoover81/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push snhoover81/multi-client
+  - docker push snhoover81/multi-nginx
+  - docker push snhoover81/multi-server
+  - docker push snhoover81/multi-worker
